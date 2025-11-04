@@ -25,8 +25,12 @@ class Storage(metaclass=SingletonMeta):
         return data_path.open("wb")
 
     def write(self, data) -> None:
-        
         self.file.write(data)
+    
+    def close(self):
+        if self.file:
+            self.file.close()
+            log.info("Storage file closed.")
 
     @classmethod
     def read_file(cls) -> bytes:
@@ -50,21 +54,8 @@ class Storage(metaclass=SingletonMeta):
 
                 lat, lon, alt = record_struct.unpack(chunk)
                 print(f"Lat={lat}, Lon={lon}, Alt={alt}")
-    # def read_packed(cls, fmt: str) -> list:
-    #     """Read the file and return a list of tuples unpacked with struct.unpack(fmt, ...)."""
-    #     path = cls.get_data_path()
-    #     if not path.exists():
-    #         return []
-    #     size = struct.calcsize(fmt)
-    #     items = []
-    #     with path.open("rb") as f:
-    #         while True:
-    #             chunk = f.read(size)
-    #             if not chunk or len(chunk) < size:
-    #                 break
-    #             items.append(struct.unpack(fmt, chunk))
-    #     return items
 
+    
 
 
 
