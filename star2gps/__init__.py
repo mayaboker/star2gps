@@ -1,3 +1,4 @@
+
 DATA_FORMAT = "<ddd" # lat, lon, alt as doubles
 
 class SingletonMeta(type):

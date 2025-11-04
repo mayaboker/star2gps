@@ -1,5 +1,6 @@
 # 
-
+# Read GPS data via MAVLink protocol
+# 
 from pymavlink import mavutil
 import threading
 import logging
@@ -14,10 +15,20 @@ log = logging.getLogger(__name__)
 
 class GPSReceiver:
     def __init__(self, connection_string="tcp:127.0.0.1:5760"):
-        self.master = mavutil.mavlink_connection(connection_string)
-        self.request_gps_stream()
+        self.__open(connection_string)
         self.is_closing = False
         self.on_gps_data = Event()
+
+    def __open(self, connection_string):
+        log.info("Opening MAVLink connection...")
+        try:
+            self.master = mavutil.mavlink_connection(connection_string)
+            self.request_gps_stream()
+            self.master.wait_heartbeat()
+            log.info("MAVLink heartbeat received.")
+        except Exception as e:
+            log.error("Failed to open MAVLink connection")
+            raise e
 
     def request_gps_stream(self):
         # Request GPS data stream
@@ -43,12 +54,7 @@ class GPSReceiver:
                     lon,
                     alt
                 )
-                #     'fix_type': gps['fix_type'],
-                #     'satellites_visible': gps['satellites_visible'],
-                #     'lat': gps['lat'] / 1e7,
-                #     'lon': gps['lon'] / 1e7,
-                #     'alt': gps['alt'] / 1000  # in meters
-                # }
+
 
             if self.is_closing:
                 break

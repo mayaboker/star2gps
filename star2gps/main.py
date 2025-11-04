@@ -24,12 +24,16 @@ class Options:
     dest_port: int = 5005
 
 class Star2GPS(metaclass=SingletonMeta):
+    """
+    Main application class for Star2GPS.
+    """
     def __init__(self):
         log.info("Starting Star2GPS...")
         self.mavlink_handler = None
         self.storage: Storage = None
         self.transport = None
 
+    #region private
     def _handle_gps_data(self, lat, lot, alt):
         log.info(f"GPS Data - Lat: {lat}, Lon: {lot}, Alt: {alt}")
         payload = struct.pack(DATA_FORMAT, float(lat), float(lot), float(alt))
@@ -39,17 +43,30 @@ class Star2GPS(metaclass=SingletonMeta):
         if options.udp:
             log.debug("Sending GPS data via UDP")
             self.transport.send_gps(payload)
-        
-    def run(self):
-        if options.udp:
-            self.transport = Transport(options.dest_address, options.dest_port)
-        if options.log:
-           self.storage = Storage()
+    #endregion
 
-        if options.gps:
-            self.mavlink_handler = GPSReceiver()
-            self.mavlink_handler.on_gps_data += self._handle_gps_data
-            self.mavlink_handler.run()
+    # region public
+    def run(self):
+        try:
+            if options.udp:
+                self.transport = Transport(options.dest_address, options.dest_port)
+
+            if options.log:
+                self.storage = Storage()
+
+            if options.gps:
+                self.mavlink_handler = GPSReceiver()
+                self.mavlink_handler.on_gps_data += self._handle_gps_data
+                self.mavlink_handler.run()
+            else:
+                log.info("TODO: firefox ")
+                
+        except Exception as e:  
+            log.error("Fail to start")
+            self.close()
+            sys.exit(1)
+        finally:
+            pass
             # exit immediately on Ctrl-C or termination
         signal.pause()
 
@@ -62,7 +79,13 @@ class Star2GPS(metaclass=SingletonMeta):
         if self.storage:
             self.storage.close()
         
+    #endregion
+
+# region main
 def _handle_exit(signum, frame):
+    """
+    Handle exit signals to gracefully shut down the application.
+    """
     start2gps.close()
     exit(0)
 
@@ -84,3 +107,4 @@ if __name__ == "__main__":
     
     start2gps = Star2GPS()
     start2gps.run()
+# endregion
