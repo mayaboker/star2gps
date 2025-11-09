@@ -19,9 +19,8 @@ log = logging.getLogger(__name__)
 class Options:
     gps: bool = True
     log: bool = True
-    udp: bool = True
-    dest_address: str = "127.0.0.1"
-    dest_port: int = 5005
+    dest_address: str = ""
+    dest_port: int = 0
 
 class Star2GPS(metaclass=SingletonMeta):
     """
@@ -34,22 +33,24 @@ class Star2GPS(metaclass=SingletonMeta):
         self.transport = None
 
     #region private
-    def _handle_gps_data(self, lat, lot, alt):
-        log.info(f"GPS Data - Lat: {lat}, Lon: {lot}, Alt: {alt}")
-        payload = struct.pack(DATA_FORMAT, float(lat), float(lot), float(alt))
+    def _handle_gps_data(self, lat, lon, alt):
+        """Handle incoming GPS from backend.
+        serialize and send via UDP and/or log to file.
+        """
+        log.info(f"GPS Data - Lat: {lat}, Lon: {lon}, Alt: {alt}")
+        payload = struct.pack(DATA_FORMAT, float(lat), float(lon), float(alt))
         log.debug("Packed GPS payload: %s", payload.hex())
         if options.log:
             self.storage.write(payload)
-        if options.udp:
-            log.debug("Sending GPS data via UDP")
-            self.transport.send_gps(payload)
+        
+        self.transport.send_gps(payload)
     #endregion
 
     # region public
     def run(self):
         try:
-            if options.udp:
-                self.transport = Transport(options.dest_address, options.dest_port)
+            
+            self.transport = Transport(options.dest_address, options.dest_port)
 
             if options.log:
                 self.storage = Storage()
@@ -59,6 +60,7 @@ class Star2GPS(metaclass=SingletonMeta):
                 self.mavlink_handler.on_gps_data += self._handle_gps_data
                 self.mavlink_handler.run()
             else:
+                # TODO: implement 
                 log.info("TODO: firefox ")
                 
         except Exception as e:  
@@ -95,14 +97,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="star2gps options")
     parser.add_argument('--gps', dest='gps', action='store_true', help='enable GPS output')
     parser.add_argument('--log', dest='log', action='store_true', help='enable logging')
-    parser.add_argument('--udp', dest='udp', action='store_true', help='enable UDP output')
-    parser.set_defaults(gps=True, log=True, udp=True)
+    parser.add_argument('--address', type=str, default="127.0.0.1", help='udp destination address')
+    parser.add_argument('--port', type=int, default=5005, help='udp destination port')
+
 
     args = parser.parse_args()
     options = Options(
         args.gps,
         args.log,
-        args.udp,
+        args.address,
+        args.port
     )
     
     start2gps = Star2GPS()

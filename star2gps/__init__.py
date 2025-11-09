@@ -1,7 +1,9 @@
 
-DATA_FORMAT = "<ddd" # lat, lon, alt as doubles
+DATA_FORMAT = "<ddd" # lat, lon, alt as doubles as little-endian
 
 class SingletonMeta(type):
+    """ A thread-safe implementation of Singleton.
+    """
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -27,6 +29,8 @@ class Event:
 
 
     def fire(self, *args, **kwargs):
-        # copy list to allow handlers to modify registrations safely
+        """Invoke all registered handlers with the given arguments.
+        #TODO: what about exception handling here?
+        """
         for handler in list(self._handlers):
             handler(*args, **kwargs)
