@@ -39,20 +39,41 @@ class GPSReceiver:
             5,   # rate in Hz
             1    # start streaming (1=on, 0=off)
         )
+    
+    def fix_type_to_quality(self, fix_type: int) -> int:
+        """Map MAVLink fix_type to NMEA GPGGA fix quality."""
+        if fix_type in (0, 1):  # no fix
+            return 0
+        elif fix_type == 2 or fix_type == 3:
+            return 1  # GPS fix
+        elif fix_type == 4:
+            return 2  # DGPS fix
+        elif fix_type == 5:
+            return 5  # RTK Float
+        elif fix_type == 6:
+            return 4  # RTK Fixed
+        return 0
 
     def receive_gps_data(self):
         while True:
             # Wait for a GPS message
-            msg = self.master.recv_match(type=['GPS_RAW_INT', 'GPS2_RAW'], blocking=True)
+            msg = self.master.recv_match(type=['GPS_RAW_INT'], blocking=True)
             if msg:
                 gps = msg.to_dict()
                 lat = gps['lat'] / 1e7
                 lon = gps['lon'] / 1e7
                 alt = gps['alt'] / 1000
+                sats = gps['satellites_visible']
+                hdop = gps['eph'] / 100.0
+                fix_quality = self.fix_type_to_quality(gps['fix_type'])
+                
                 self.on_gps_data.fire(
                     lat,
                     lon,
-                    alt
+                    alt,
+                    sats,
+                    hdop,
+                    fix_quality
                 )
 
 

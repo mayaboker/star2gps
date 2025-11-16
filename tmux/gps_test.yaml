@@ -1,0 +1,20 @@
+session_name: gps_test
+
+start_directory: /home/user/projects/star2gps
+
+windows:
+  - window_name: star2gps
+    layout: tiled
+    panes:
+      - shell_command: # sitl
+        - printf'\033]2;sitl\033\\'
+        - ./tools/run_sitl.sh
+      - shell_command: # socat
+        - printf'\033]2;socat\033\\'
+        - socat -d -d PTY,raw,echo=0 STDOUT
+      - shell_command: # main
+        - printf'\033]2;main\033\\'
+        - sleep 1;python3 star2gps/main.py --gps --log --baudrate 9600 --port /dev/pts/13
+      
+  
+

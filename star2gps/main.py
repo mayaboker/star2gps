@@ -2,12 +2,14 @@ import sys
 import argparse
 from mavlink import GPSReceiver
 from storage import Storage
-from transport import Transport
+from transport import Transport, SerialConnection
+
+from nmea import GPGGA
 from dataclasses import dataclass
 import signal
 from star2gps import SingletonMeta
 import logging
-import struct
+import nmea
 
 from  star2gps import DATA_FORMAT
 
@@ -19,9 +21,9 @@ log = logging.getLogger(__name__)
 class Options:
     gps: bool = True
     log: bool = True
-    dest_address: str = ""
-    dest_port: int = 0
-
+    baudrate: int = 9600
+    port: str = "/dev/pts/13"
+    
 class Star2GPS(metaclass=SingletonMeta):
     """
     Main application class for Star2GPS.
@@ -33,24 +35,26 @@ class Star2GPS(metaclass=SingletonMeta):
         self.transport = None
 
     #region private
-    def _handle_gps_data(self, lat, lon, alt):
+    def _handle_gps_data(self, lat, lon, alt, sats, hdop, fix_quality):
         """Handle incoming GPS from backend.
         serialize and send via UDP and/or log to file.
         """
         log.info(f"GPS Data - Lat: {lat}, Lon: {lon}, Alt: {alt}")
-        payload = struct.pack(DATA_FORMAT, float(lat), float(lon), float(alt))
+        payload = nmea.GPGGA(lat=lat, lon=lon, alt=alt, sats=sats, hdop=hdop, fix_quality=fix_quality).to_nmea().encode('ascii') + b'\r\n'
         log.debug("Packed GPS payload: %s", payload.hex())
         if options.log:
             self.storage.write(payload)
         
-        self.transport.send_gps(payload)
+        self.transport.write(payload)
     #endregion
 
     # region public
     def run(self):
         try:
             
-            self.transport = Transport(options.dest_address, options.dest_port)
+            # self.transport = Transport(options.dest_address, options.dest_port)
+            self.transport = SerialConnection(port=options.port, baudrate=options.baudrate)
+            self.transport.open()
 
             if options.log:
                 self.storage = Storage()
@@ -97,15 +101,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="star2gps options")
     parser.add_argument('--gps', dest='gps', action='store_true', help='enable GPS output')
     parser.add_argument('--log', dest='log', action='store_true', help='enable logging')
-    parser.add_argument('--address', type=str, default="127.0.0.1", help='udp destination address')
-    parser.add_argument('--port', type=int, default=5005, help='udp destination port')
+    parser.add_argument('--baudrate', type=int, default=9600, help='serial boundrate')
+    parser.add_argument('--port', type=str, default="/dev/pts/13", help='serial destination port')
 
 
     args = parser.parse_args()
     options = Options(
         args.gps,
         args.log,
-        args.address,
+        args.baudrate,
         args.port
     )
     

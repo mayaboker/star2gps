@@ -1,0 +1,1 @@
+bind '"\C-t": "tmuxp load tmux/gps_test.yaml"'
