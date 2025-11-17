@@ -1,0 +1,36 @@
+#!/bin/bash
+set -e
+
+# Install Python dependencies if not available as Debian packages
+if [ "$1" = "configure" ]; then
+    PIP_CMD="python3 -m pip"
+
+    # Ensure pip is available (dependency should provide it, but guard just in case)
+    if ! command -v python3 >/dev/null; then
+        echo "python3 is required but not installed" >&2
+        exit 1
+    fi
+
+    if ! python3 -m pip --version >/dev/null 2>&1; then
+        echo "python3-pip is required but not available" >&2
+        exit 1
+    fi
+
+    # Check and install missing Python packages via pip if needed
+    python3 -c "import pymavlink" 2>/dev/null || $PIP_CMD install pymavlink || true
+    python3 -c "import zmq" 2>/dev/null || $PIP_CMD install pyzmq || true
+    python3 -c "import msgpack" 2>/dev/null || $PIP_CMD install msgpack || true
+    python3 -c "import serial" 2>/dev/null || $PIP_CMD install pyserial || true
+
+    if command -v systemctl >/dev/null; then
+        # Enable and start the service
+        systemctl daemon-reload
+        systemctl enable star2gps.service
+        systemctl start star2gps.service || true
+    else
+        echo "systemctl not found; skipping service enablement (system without systemd?)" >&2
+    fi
+fi
+
+exit 0
+

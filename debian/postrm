@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+# Clean up after removal
+if [ "$1" = "purge" ]; then
+    systemctl daemon-reload
+fi
+
+exit 0
+

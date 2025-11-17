@@ -1,6 +1,6 @@
 session_name: gps_test
 
-start_directory: /home/user/projects/star2gps
+start_directory: /home/user/git/star2gps
 
 windows:
   - window_name: star2gps

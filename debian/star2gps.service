@@ -1,0 +1,16 @@
+[Unit]
+Description=Star2GPS Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 -m star2gps.main --gps --log --baudrate 9600 --port /dev/pts/13
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,6 +1,6 @@
 
 import time
-from typing import Protocol
+from typing import Protocol, Tuple
 from dataclasses import dataclass
 
 TALKER = "GP"
@@ -28,7 +28,7 @@ class GPGGA(NMEASentence):
     geoid_sep: float=0.0
 
 
-    def _deg_to_nmea(self, value: float, is_lat: bool) -> tuple[str, str]:
+    def _deg_to_nmea(self, value: float, is_lat: bool) -> Tuple[str, str]:
         """Convert decimal degrees to NMEA degrees/minutes format."""
         deg = int(abs(value))
         minutes = (abs(value) - deg) * 60
