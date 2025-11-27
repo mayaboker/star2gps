@@ -72,7 +72,7 @@ class Star2GPS(metaclass=SingletonMeta):
                 log.info("TODO: firefox ")
                 
         except Exception as e:  
-            log.error("Fail to start")
+            log.error(f"Fail to start: {e}")
             self.close()
             sys.exit(1)
         finally:

@@ -6,7 +6,7 @@ This guide explains how to build a Debian package for star2gps that installs as 
 
 1. Install required tools:
 ```bash
-sudo apt-get install python3-stdeb python3-all dh-python debhelper
+sudo apt-get install python3-stdeb python3-all dh-python debhelper socat tmuxp
 ```
 
 2. Activate your virtual environment (if using one):
@@ -154,4 +154,5 @@ The package includes:
 2. **Port not found**: Ensure `/dev/pts/13` exists or update the service file
 3. **Permission issues**: The service runs as root by default
 4. **Build errors**: Ensure all dependencies are installed and virtual environment is activated
+5. **Debug ModuleNotFoundError: No module named 'star2gps'**: pip install -e
 
