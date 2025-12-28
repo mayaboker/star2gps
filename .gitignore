@@ -3,3 +3,4 @@ log/
 __pycache__/
 # eeprom.bin
 terrain/
+*.egg-info
