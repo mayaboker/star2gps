@@ -4,7 +4,6 @@ from typing import Protocol, Tuple
 from typing import List, Optional
 from dataclasses import dataclass, field
 
-TALKER = "GP"
 
 class NMEASentence(Protocol):
     def to_nmea(self) -> str:
@@ -127,7 +126,7 @@ class GPGGA(NMEASentence):
         lon_str, lon_dir = self._deg_to_nmea(self.lon, False)
 
         # Assemble the data fields
-        data = f"{TALKER}GGA,{utc_time},{lat_str},{lat_dir},{lon_str},{lon_dir}," \
+        data = f"GPGGA,{utc_time},{lat_str},{lat_dir},{lon_str},{lon_dir}," \
                f"{self.fix_quality},{self.sats:02d},{self.hdop:.1f},{self.alt:.1f},M,{self.geoid_sep:.1f},M,,"
 
         checksum = self._checksum(data)
